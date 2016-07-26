@@ -1,1 +1,1 @@
-include ':app'
+include ':app', ':activeandroid-3.0'

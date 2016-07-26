@@ -9,13 +9,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    ArrayList<ToDoItem> dbItems;
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
@@ -35,8 +32,10 @@ public class MainActivity extends AppCompatActivity {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
         itemsAdapter.add(itemText);
+        ToDoItem item = new ToDoItem(itemText);
+        item.save();
+        dbItems.add(item);
         etNewItem.setText("");
-        writeItems();
     }
 
     private final int EDIT_ITEM_REQUEST = 20;
@@ -48,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
                                            View view, int position, long id) {
                 items.remove(position);
                 itemsAdapter.notifyDataSetChanged();
-                writeItems();
+                dbItems.get(position).delete();
+                dbItems.remove(position);
                 return true;
             }
         });
@@ -71,27 +71,16 @@ public class MainActivity extends AppCompatActivity {
             int position = data.getExtras().getInt("position");
             items.set(position, itemText);
             itemsAdapter.notifyDataSetChanged();
-            writeItems();
+            dbItems.get(position).description = itemText;
+            dbItems.get(position).save();
         }
     }
 
     private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        } catch (IOException e) {
-            items = new ArrayList<>();
-        }
-    }
-
-    private void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
+        dbItems = ToDoItem.getAll();
+        items = new ArrayList<String>();
+        for (ToDoItem item : dbItems) {
+            items.add(item.description);
         }
     }
 }
